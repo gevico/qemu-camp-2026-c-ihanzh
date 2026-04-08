@@ -9,6 +9,8 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
 
 #define MAX_EXERCISES 40
 #define MAX_NAME_LEN 64
@@ -51,6 +53,68 @@ static int file_contains_marker(const char *filename, const char *marker) {
 
     fclose(file);
     return 0;
+}
+
+static int should_scan_marker_in_file(const char *filename) {
+    const char *extension = strrchr(filename, '.');
+
+    if (strcmp(filename, "Makefile") == 0) {
+        return 1;
+    }
+
+    if (extension == NULL) {
+        return 0;
+    }
+
+    return strcmp(extension, ".c") == 0 || strcmp(extension, ".h") == 0;
+}
+
+static int directory_contains_marker(const char *directory, const char *marker) {
+    DIR *dir;
+    struct dirent *entry;
+
+    dir = opendir(directory);
+    if (dir == NULL) {
+        return 0;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        char path[512];
+        struct stat st;
+
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        snprintf(path, sizeof(path), "%s/%s", directory, entry->d_name);
+        if (stat(path, &st) != 0) {
+            continue;
+        }
+
+        if (S_ISDIR(st.st_mode)) {
+            if (directory_contains_marker(path, marker)) {
+                closedir(dir);
+                return 1;
+            }
+            continue;
+        }
+
+        if (S_ISREG(st.st_mode) && should_scan_marker_in_file(entry->d_name) &&
+            file_contains_marker(path, marker)) {
+            closedir(dir);
+            return 1;
+        }
+    }
+
+    closedir(dir);
+    return 0;
+}
+
+static int exercise_contains_marker(const char *exercise_name, const char *marker) {
+    char exercise_dir[256];
+
+    snprintf(exercise_dir, sizeof(exercise_dir), "exercises/%s", exercise_name);
+    return directory_contains_marker(exercise_dir, marker);
 }
 
 static void get_primary_source_path(const char *exercise_name, char *filepath, size_t filepath_size) {
@@ -112,7 +176,7 @@ static int check_exercise(const char *exercise_name) {
         return 0;
     }
 
-    if (file_contains_marker(filepath, "I AM NOT DONE")) {
+    if (exercise_contains_marker(exercise_name, "I AM NOT DONE")) {
         printf(COLOR_YELLOW "⏳ 练习题尚未完成，请移除 'I AM NOT DONE' 标记" COLOR_RESET "\n");
         return 0;
     }
@@ -141,7 +205,7 @@ static void list_exercises(checker_t *checker) {
         char filepath[256];
 
         get_primary_source_path(checker->exercises[i].name, filepath, sizeof(filepath));
-        if (file_contains_marker(filepath, "I AM NOT DONE")) {
+        if (exercise_contains_marker(checker->exercises[i].name, "I AM NOT DONE")) {
             printf("  %s - " COLOR_RED "❌ 未完成" COLOR_RESET "\n", checker->exercises[i].name);
         } else {
             printf("  %s - " COLOR_GREEN "✅ 已完成" COLOR_RESET "\n", checker->exercises[i].name);

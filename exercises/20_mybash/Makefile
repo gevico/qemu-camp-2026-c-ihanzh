@@ -7,6 +7,8 @@
 # =============================================
 
 PWD := $(shell pwd)
+OBJDIR ?= ./obj
+BINDIR ?= ./bin
 
 # 所有子模块目录（静态库：生成 .a）
 SUBDIRS := \
@@ -20,15 +22,16 @@ all: mybash
 
 # 通用规则：构建每个子模块（静态库）
 $(SUBDIRS):
-	$(MAKE) -C src/$@ OBJDIR=$(PWD)/obj/$@ BINDIR=$(PWD)/bin
+	$(MAKE) -C src/$@ OBJDIR=$(abspath $(OBJDIR))/$@ BINDIR=$(abspath $(BINDIR))
 # 构建 mybash（可执行文件，依赖上面的库）
 mybash: $(SUBDIRS)
-	$(CC) -o bin/mybash \
+	@mkdir -p $(BINDIR)
+	$(CC) -o $(BINDIR)/mybash \
 		src/mybash/main.c \
-		obj/myfile/libmyfile.a \
-		obj/mysed/libmysed.a \
-		obj/mywc/libmywc.a \
-		obj/mytrans/libmytrans.a \
+		$(abspath $(OBJDIR))/myfile/libmyfile.a \
+		$(abspath $(OBJDIR))/mysed/libmysed.a \
+		$(abspath $(OBJDIR))/mywc/libmywc.a \
+		$(abspath $(OBJDIR))/mytrans/libmytrans.a \
 		-Iinclude -g
 
 # 清理所有生成的文件

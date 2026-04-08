@@ -14,28 +14,36 @@ int main() {
         printf("无法打开文件\n");
         return 1;
     }
-    
+
     Student *students[3];
-    
-    for (int i = 0; i < 3; i++) 
-    {
-	    // TODO: 在这里添加你的代码
-        // I AM NOT DONE
+
+    for (int i = 0; i < 3; i++) {
+        students[i] = (Student *)malloc(sizeof(Student));
+        if (students[i] == NULL) {
+            fprintf(stderr, "内存分配失败\n");
+            return 1;
+        }
+
+        char line[128];
+        if (fgets(line, sizeof(line), file) == NULL) {
+            fprintf(stderr, "读取学生数据失败\n");
+            return 1;
+        }
+
+        if (sscanf(line, "%19s %49s %d", students[i]->id, students[i]->name, &students[i]->age) != 3) {
+            fprintf(stderr, "学生数据格式错误\n");
+            return 1;
+        }
     }
     fclose(file);
-    
-    for (int i = 0; i < 3; i++) 
-    {
-        printf("学号：%s, 姓名：%s, 年龄：%d\n", 
-               students[i]->id, 
-               students[i]->name, 
-               students[i]->age);
+
+    for (int i = 0; i < 3; i++) {
+        printf("学号：%s, 姓名：%s, 年龄：%d\n", students[i]->id, students[i]->name, students[i]->age);
     }
-    
-    for (int i = 0; i < 3; i++) 
-    {
+
+    for (int i = 0; i < 3; i++) {
         free(students[i]);
     }
-    
+
     return 0;
 }

@@ -3,7 +3,7 @@
 #include <string.h>
 
 #define MAX_STUDENTS 100
-#define NAME_LEN     50
+#define NAME_LEN 50
 
 typedef struct {
     char name[NAME_LEN];
@@ -12,13 +12,37 @@ typedef struct {
 
 Student students[MAX_STUDENTS];
 
+void swap(Student* a, Student* b) {
+    Student temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
 void quick_sort(int left, int right) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    if (left >= right) return;
+    int pivot = students[right].score;
+    int i = left, j = right - 1;
+    while (i <= j) {
+        while (i <= j && students[i].score > pivot) {
+            i += 1;
+        }
+        while (i <= j && students[j].score < pivot) {
+            j -= 1;
+        }
+        if (i < j) {
+            swap(&students[i], &students[j]);
+            i += 1;
+            j -= 1;
+        }
+    }
+    swap(&students[i], &students[right]);
+    quick_sort(left, i - 1);
+    quick_sort(i + 1, right);
 }
 
 int main(void) {
-    FILE *file = fopen("03_students.txt", "r");
+    FILE* file = fopen("03_students.txt", "r");
     if (!file) {
         printf("错误：无法打开文件 03_students.txt\n");
         return 1;

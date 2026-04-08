@@ -4,22 +4,16 @@
 
 typedef int (*CompareFunc)(const void *, const void *);
 
-int compareInt(const void *a, const void *b) {
-    return (*(int*)a - *(int*)b);
-}
+int compareInt(const void *a, const void *b) { return (*(int *)a - *(int *)b); }
 
 int compareFloat(const void *a, const void *b) {
-    float diff = (*(float*)a - *(float*)b);
+    float diff = (*(float *)a - *(float *)b);
     return (diff > 0) ? 1 : ((diff < 0) ? -1 : 0);
 }
 
-int compareString(const void *a, const void *b) {
-    return strcmp(*(char**)a, *(char**)b);
-}
+int compareString(const void *a, const void *b) { return strcmp(*(char **)a, *(char **)b); }
 
-void sort(void *array, size_t n, size_t size, CompareFunc compare) {
-    qsort(array, n, size, compare);
-}
+void sort(void *array, size_t n, size_t size, CompareFunc compare) { qsort(array, n, size, compare); }
 
 void processFile(const char *filename) {
     FILE *fin = fopen(filename, "r");
@@ -38,10 +32,53 @@ void processFile(const char *filename) {
     if (n > 20) n = 20;  // 最多支持20个元素
 
     printf("=== 处理数据来自: %s ===\n", filename);
-
+    char line[128];
     switch (choice) {
         // TODO: 在这里添加你的代码
-        // I AM NOT DONE
+        case 1: {
+            fgets(line, sizeof(line), fin);
+            int *arr = (int *)malloc(sizeof(int) * n);
+            for (int i = 0; i < n; ++i) {
+                fscanf(fin, "%d", &arr[i]);
+            }
+            sort(arr, n, sizeof(int), compareInt);
+            for (int i = 0; i < n; ++i) {
+                printf("%d ", arr[i]);
+            }
+            printf("\n");
+            free(arr);
+            break;
+        }
+        case 2: {
+            fgets(line, sizeof(line), fin);
+            float *arr = (float *)malloc(sizeof(float) * n);
+            for (int i = 0; i < n; ++i) {
+                fscanf(fin, "%f", &arr[i]);
+            }
+            sort(arr, n, sizeof(float), compareFloat);
+            for (int i = 0; i < n; ++i) {
+                printf("%f ", arr[i]);
+            }
+            printf("\n");
+            free(arr);
+            break;
+        }
+        default: {
+            fgets(line, sizeof(line), fin);
+            char **arr = (char **)malloc(sizeof(char *) * n);
+            for (int i = 0; i < n; ++i) {
+                arr[i] = (char *)malloc(sizeof(char) * 128);
+                fscanf(fin, "%s", arr[i]);
+            }
+            sort(arr, n, sizeof(char *), compareString);
+            for (int i = 0; i < n; ++i) {
+                printf("%s ", arr[i]);
+                free(arr[i]);
+            }
+            printf("\n");
+            free(arr);
+            break;
+        }
     }
 
     fclose(fin);

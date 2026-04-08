@@ -1,15 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 typedef struct {
     char name[20];
     int score;
 } Student;
 
+void swap(Student *a, Student *b) {
+    Student temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
 void insertion_sort(Student students[], int n) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    for (int i=1; i<n; ++i) {
+        for (int j=i; j>0; --j) {
+            if (students[j].score > students[j-1].score) {
+                swap(&students[j], &students[j-1]);
+            }
+        }
+    }
+    return;
 }
 
 int main(void) {

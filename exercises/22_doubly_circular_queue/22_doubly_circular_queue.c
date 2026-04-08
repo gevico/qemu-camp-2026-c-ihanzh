@@ -18,25 +18,37 @@ static link get_last(void) {
 
 static void enqueue_int(int v) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    insert(make_node(v));
 }
 
 static int dequeue_int(int *out) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    link last = get_last();
+    if (last != NULL) {
+        *out = last->data;
+        delete(last);
+        return 1;
+    }
+    return 0;
 }
 
 static void print_dequeue_n(int n) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    int out = -1;
+    for (int i = 0; i < n; ++i) {
+        if (dequeue_int(&out)) {
+            printf("%d ", out);
+        }
+    }
 }
 
 int main(void) {
     // 基本 FIFO 顺序：1 2 3
     enqueue_int(1);
     enqueue_int(2);
+    print_dequeue_n(2);
     enqueue_int(3);
-    print_dequeue_n(3);
+    print_dequeue_n(1);
     printf("\n");
     destroy();
 

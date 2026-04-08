@@ -3,7 +3,7 @@
 #include <string.h>
 
 #define MAX_STUDENTS 50
-#define NAME_LEN     50
+#define NAME_LEN 50
 
 typedef struct {
     char name[NAME_LEN];
@@ -14,7 +14,12 @@ Student students[MAX_STUDENTS];
 int n;
 int linear_search(const char *target_name) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    for (int i = 0; i < n; i++) {
+        if (strcmp(students[i].name, target_name) == 0) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 int main(void) {

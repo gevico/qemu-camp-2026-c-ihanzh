@@ -3,7 +3,7 @@
 #include <string.h>
 
 #define MAX_STUDENTS 50
-#define NAME_LEN     50
+#define NAME_LEN 50
 
 // 学生结构体
 typedef struct {
@@ -14,9 +14,24 @@ typedef struct {
 Student students[MAX_STUDENTS];
 int n;
 
+int binary_serach_helper(const char *target_name, int l, int r) {
+    if (l >= r) {
+        return -1;
+    }
+    int mid = l + ((r - l) >> 1);
+    int cmp = strcmp(target_name, students[mid].name);
+    if (cmp < 0) {
+        return binary_serach_helper(target_name, 0, mid);
+    } else if (cmp > 0) {
+        return binary_serach_helper(target_name, mid + 1, r);
+    }
+
+    return mid;
+}
+
 int binary_search(const char *target_name) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    return binary_serach_helper(target_name, 0, n);
 }
 
 int main(void) {

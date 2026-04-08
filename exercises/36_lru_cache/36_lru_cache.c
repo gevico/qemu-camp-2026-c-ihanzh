@@ -33,53 +33,159 @@ typedef struct {
 
 static unsigned hash_int(int key) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    return key;
 }
 
 static HashEntry* hash_find(LRUCache* c, int key, HashEntry*** pprev_next) {
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    unsigned hash = hash_int(key) % c->bucket_count;
+    HashEntry** cur = &c->buckets[hash];
+
+    while (*cur) {
+        if ((*cur)->key == key) {
+            if (pprev_next) {
+                *pprev_next = cur;
+            }
+            return *cur;
+        }
+        cur = &(*cur)->next;
+    }
+
+    if (pprev_next) {
+        *pprev_next = cur;
+    }
+    return NULL;
 }
 
 static void list_add_to_head(LRUCache* c, LRUNode* node) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    node->next = c->head;
+    node->prev = NULL;
+    if (node->next != NULL) {
+        node->next->prev = node;
+    }
+    c->head = node;
+    if (c->tail == NULL) {
+        c->tail = node;
+    }
 }
 
 static void list_remove(LRUCache* c, LRUNode* node) {
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    if (node->prev != NULL) {
+        node->prev->next = node->next;
+    } else {
+        c->head = node->next;
+    }
+    if (node->next != NULL) {
+        node->next->prev = node->prev;
+    } else {
+        c->tail = node->prev;
+    }
 }
 
 static void list_move_to_head(LRUCache* c, LRUNode* node) {
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    if (c->head == node) {
+        return;
+    }
+    list_remove(c, node);
+    list_add_to_head(c, node);
 }
 
 static LRUNode* list_pop_tail(LRUCache* c) {
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    LRUNode* tail = c->tail;
+    if (!tail) {
+        return NULL;
+    }
+    list_remove(c, tail);
+    return tail;
 }
 
 /* LRU 接口实现 */
 static LRUCache* lru_create(int capacity) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    LRUCache* c = (LRUCache*)malloc(sizeof(LRUCache));
+    if (!c) return NULL;
+    c->capacity = capacity;
+    c->size = 0;
+    c->head = NULL;
+    c->tail = NULL;
+    c->bucket_count = capacity * 2; /* 简单设置哈希桶数量 */
+    c->buckets = (HashEntry**)calloc(c->bucket_count, sizeof(HashEntry*));
+    if (!c->buckets) {
+        free(c);
+        return NULL;
+    }
+    return c;
 }
 
 static void lru_free(LRUCache* c) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    for (size_t i = 0; i < c->bucket_count; i++) {
+        HashEntry* entry = c->buckets[i];
+        while (entry) {
+            HashEntry* next = entry->next;
+            free(entry);
+            entry = next;
+        }
+    }
+    free(c->buckets);
+    for (LRUNode* node = c->head; node;) {
+        LRUNode* next = node->next;
+        free(node);
+        node = next;
+    }
+    free(c);
 }
 
 static int lru_get(LRUCache* c, int key, int* out_value) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    HashEntry* entry = hash_find(c, key, NULL);
+    if (!entry) {
+        return 0; /* 未找到 */
+    }
+    *out_value = entry->node->value;
+    list_move_to_head(c, entry->node);
+    return 1; /* 找到 */
 }
 
 static void lru_put(LRUCache* c, int key, int value) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    HashEntry* entry = hash_find(c, key, NULL);
+    if (entry) {
+        /* 更新现有节点值并移动到头部 */
+        entry->node->value = value;
+        list_move_to_head(c, entry->node);
+        return;
+    }
+    if (c->size >= c->capacity) {
+        /* 淘汰 LRU 节点 */
+        LRUNode* tail = list_pop_tail(c);
+        c->size -= 1;
+        /* 从哈希表中删除对应项 */
+        HashEntry** pprev_next;
+        hash_find(c, tail->key, &pprev_next);
+        if (pprev_next && *pprev_next) {
+            HashEntry* to_delete = *pprev_next;
+            *pprev_next = to_delete->next;
+            free(to_delete);
+        }
+        free(tail);
+    }
+    LRUNode* new_node = (LRUNode*)malloc(sizeof(LRUNode));
+    if (!new_node) return; /* 内存分配失败 */
+    new_node->key = key;
+    new_node->value = value;
+    list_add_to_head(c, new_node);
+    /* 添加到哈希表 */
+    HashEntry* new_entry = (HashEntry*)malloc(sizeof(HashEntry));
+    if (!new_entry) {
+        free(new_node);
+        return;
+    }
+    new_entry->key = key;
+    new_entry->node = new_node;
+    new_entry->next = c->buckets[hash_int(key) % c->bucket_count];
+    c->buckets[hash_int(key) % c->bucket_count] = new_entry;
+    c->size += 1;
 }
 
 /* 打印当前缓存内容（从头到尾） */
